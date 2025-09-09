@@ -77,11 +77,32 @@ func postArtist(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+func getArtist(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	artist, ok := artists[id]
+	if !ok {
+		http.Error(w, "Артист не найден", http.StatusNotFound)
+		return
+	}
+
+	resp, err := json.Marshal(artist)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}
+
 func main() {
 	r := chi.NewRouter()
 
 	r.Get("/artists", getArtists)
 	r.Post("/artists", postArtist)
+	r.Get("/artists/{id}", getArtist)
 
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		fmt.Printf("Ошибка при запуске сервера: %s", err.Error())
